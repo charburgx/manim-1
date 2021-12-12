@@ -201,6 +201,10 @@ class SceneFileWriter(object):
             ]
         elif self.movie_file_extension == ".gif":
             command += []
+        elif self.movie_file_extension == ".avi":
+            command += [
+                '-vcodec', 'huffyuv',
+            ]
         else:
             command += [
                 '-vcodec', 'libx264',

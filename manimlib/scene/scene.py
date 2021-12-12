@@ -93,7 +93,8 @@ class Scene(object):
 
     def tear_down(self):
         self.stop_skipping()
-        self.file_writer.finish()
+        if self.file_writer:
+            self.file_writer.finish()
         if self.window and self.linger_after_completion:
             self.interact()
 
@@ -104,9 +105,16 @@ class Scene(object):
         log.info("Tips: You are now in the interactive mode. Now you can use the keyboard"
             " and the mouse to interact with the scene. Just press `q` if you want to quit.")
         self.quit_interaction = False
-        self.lock_static_mobject_data()
+        self.in_animation = False
+
+        self.window.clear()
+        self.camera.clear()
+        self.camera.capture(*self.mobjects)
+
+        self.window._window.flip()        
+
         while not (self.window.is_closing or self.quit_interaction):
-            self.update_frame(1 / self.camera.frame_rate)
+            self.window._window.dispatch_events()
         if self.window.is_closing:
             self.window.destroy()
         if self.quit_interaction:
@@ -604,7 +612,7 @@ class Scene(object):
         if char == "r":
             self.camera.frame.to_default_state()
         elif char == "q":
-            self.quit_interaction = True
+            exit()
 
     def on_resize(self, width: int, height: int):
         self.camera.reset_pixel_shape(width, height)

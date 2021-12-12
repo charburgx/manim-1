@@ -1,3 +1,4 @@
+from dyadic_theme.constants import COL_BG, COL_SEC
 import numpy as np
 
 # Sizes relevant to default camera frame
@@ -119,7 +120,7 @@ GREY_D = "#444444"
 GREY_C = "#888888"
 GREY_B = "#BBBBBB"
 GREY_A = "#DDDDDD"
-WHITE = "#FFFFFF"
+WHITE = COL_SEC
 BLACK = "#000000"
 GREY_BROWN = "#736357"
 DARK_BROWN = "#8B4513"
