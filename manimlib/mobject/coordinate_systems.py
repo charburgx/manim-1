@@ -279,7 +279,7 @@ class Axes(VGroup, CoordinateSystem):
         },
         "x_axis_config": {},
         "y_axis_config": {
-            "line_to_number_direction": LEFT,
+            # "line_to_number_direction": LEFT,
         },
         "height": FRAME_HEIGHT - 2,
         "width": FRAME_WIDTH - 2,
@@ -330,6 +330,9 @@ class Axes(VGroup, CoordinateSystem):
             axis.point_to_number(point)
             for axis in self.get_axes()
         ])
+
+    def get_length(self, length):
+        return np.linalg.norm(self.c2p(0, 0, 0) - self.c2p(length, 0, 0))
 
     def get_axes(self):
         return self.axes

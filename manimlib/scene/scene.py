@@ -1,4 +1,5 @@
 import inspect
+import os
 import random
 import platform
 import itertools as it
@@ -612,7 +613,7 @@ class Scene(object):
         if char == "r":
             self.camera.frame.to_default_state()
         elif char == "q":
-            exit()
+            os._exit(0)
 
     def on_resize(self, width: int, height: int):
         self.camera.reset_pixel_shape(width, height)

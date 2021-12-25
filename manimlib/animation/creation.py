@@ -75,17 +75,17 @@ class DrawBorderThenFill(Animation):
 
     def begin(self):
         # Trigger triangulation calculation
-        for submob in self.mobject.get_family():
-            submob.get_triangulation()
+        # for submob in self.mobject.get_family():
+        #     submob.get_triangulation()
 
         self.outline = self.get_outline()
         super().begin()
         self.mobject.match_style(self.outline)
-        self.mobject.lock_matching_data(self.mobject, self.outline)
+        # self.mobject.lock_matching_data(self.mobject, self.outline)
 
     def finish(self):
         super().finish()
-        self.mobject.unlock_data()
+        # self.mobject.unlock_data()
 
     def get_outline(self):
         outline = self.mobject.copy()
@@ -110,19 +110,94 @@ class DrawBorderThenFill(Animation):
     def interpolate_submobject(self, submob, start, outline, alpha):
         index, subalpha = integer_interpolate(0, 2, alpha)
 
-        if index == 1 and self.sm_to_index[hash(submob)] == 0:
-            # First time crossing over
-            submob.set_data(outline.data)
-            submob.unlock_data()
-            if not self.mobject.has_updaters:
-                submob.lock_matching_data(submob, start)
-            submob.needs_new_triangulation = False
-            self.sm_to_index[hash(submob)] = 1
+        # if self.sm_to_index[hash(submob)] == 0:
+
+
+        # if index == 1 and self.sm_to_index[hash(submob)] == 0:
+        #     # First time crossing over
+        #     # submob.set_data(outline.data)
+        #     submob.unlock_data()
+        #     # if not self.mobject.has_updaters:
+        #     #     submob.lock_matching_data(submob, start)
+        #     submob.needs_new_triangulation = False
+        #     self.sm_to_index[hash(submob)] = 1
 
         if index == 0:
             submob.pointwise_become_partial(outline, 0, subalpha)
+            submob.match_style(outline)
         else:
             submob.interpolate(outline, start, subalpha)
+
+# class DrawBorderThenFill(Animation):
+#     """Draw the border first and then show the fill.
+#     Examples
+#     --------
+#     .. manim:: ShowDrawBorderThenFill
+#         class ShowDrawBorderThenFill(Scene):
+#             def construct(self):
+#                 self.play(DrawBorderThenFill(Square(fill_opacity=1, fill_color=ORANGE)))
+#     """
+
+#     def __init__(
+#         self,
+#         vmobject,
+#         run_time: float = 2,
+#         rate_func = linear,
+#         stroke_width: float = 2,
+#         stroke_color: str = None,
+#         draw_border_animation_config = {"rate_func": linear},  # what does this dict accept?
+#         fill_animation_config = {},
+#         **kwargs,
+#     ) -> None:
+#         self._typecheck_input(vmobject)
+#         super().__init__(vmobject, run_time=run_time, rate_func=rate_func, **kwargs)
+#         self.stroke_width = stroke_width
+#         self.stroke_color = stroke_color
+#         self.draw_border_animation_config = draw_border_animation_config
+#         self.fill_animation_config = fill_animation_config
+#         self.outline = self.get_outline()
+
+#     def _typecheck_input(self, vmobject) -> None:
+#         pass
+#         # if not isinstance(vmobject, (VMobject, OpenGLVMobject)):
+#         #     raise TypeError("DrawBorderThenFill only works for vectorized Mobjects")
+
+#     def begin(self) -> None:
+#         self.outline = self.get_outline()
+#         super().begin()
+
+#     def get_outline(self):
+#         outline = self.mobject.copy()
+#         outline.set_fill(opacity=0)
+#         for sm in outline.family_members_with_points():
+#             sm.set_stroke(color=self.get_stroke_color(sm), width=self.stroke_width)
+#         return outline
+
+#     def get_stroke_color(self, vmobject):
+#         if self.stroke_color:
+#             return self.stroke_color
+#         elif vmobject.get_stroke_width() > 0:
+#             return vmobject.get_stroke_color()
+#         return vmobject.get_color()
+
+#     def get_all_mobjects(self):
+#         return [*super().get_all_mobjects(), self.outline]
+
+#     def interpolate_submobject(
+#         self,
+#         submobject,
+#         starting_submobject,
+#         outline,
+#         alpha: float,
+#     ) -> None:  # Fixme: not matching the parent class? What is outline doing here?
+#         index: int
+#         subalpha: int
+#         index, subalpha = integer_interpolate(0, 2, alpha)
+#         if index == 0:
+#             submobject.pointwise_become_partial(outline, 0, subalpha)
+#             submobject.match_style(outline)
+#         else:
+#             submobject.interpolate(outline, starting_submobject, subalpha)
 
 
 class Write(DrawBorderThenFill):

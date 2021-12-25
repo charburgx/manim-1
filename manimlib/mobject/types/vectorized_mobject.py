@@ -28,7 +28,29 @@ from manimlib.utils.space_ops import get_unit_normal
 from manimlib.utils.space_ops import z_to_vector
 from manimlib.shader_wrapper import ShaderWrapper
 
+def partial_bezier_points(points: np.ndarray, a: float, b: float) -> np.ndarray:
+    """Given an array of points which define bezier curve, and two numbers 0<=a<b<=1, return an array of the same size,
+    which describes the portion of the original bezier curve on the interval [a, b].
+    This algorithm is pretty nifty, and pretty dense.
+    Parameters
+    ----------
+    points : np.ndarray
+        set of points defining the bezier curve.
+    a : float
+        lower bound of the desired partial bezier curve.
+    b : float
+        upper bound of the desired partial bezier curve.
+    Returns
+    -------
+    np.ndarray
+        Set of points defining the partial bezier curve.
+    """
+    if a == 1:
+        return [points[-1]] * len(points)
 
+    a_to_1 = np.array([bezier(points[i:])(a) for i in range(len(points))])
+    end_prop = (b - a) / (1.0 - a)
+    return np.array([bezier(a_to_1[: i + 1])(end_prop) for i in range(len(points))])
 class VMobject(Mobject):
     CONFIG = {
         "fill_color": None,
@@ -814,9 +836,70 @@ class VMobject(Mobject):
         self.set_points(new_points)
         return self
 
+    def pointwise_become_partial2(
+        self,
+        vmobject: "VMobject",
+        a: float,
+        b: float,
+    ) -> "VMobject":
+        """Given two bounds a and b, transforms the points of the self vmobject into the points of the vmobject
+        passed as parameter with respect to the bounds. Points here stand for control points of the bezier curves (anchors and handles)
+        Parameters
+        ----------
+        vmobject : VMobject
+            The vmobject that will serve as a model.
+        a : float
+            upper-bound.
+        b : float
+            lower-bound
+        """
+        assert isinstance(vmobject, VMobject)
+        # Partial curve includes three portions:
+        # - A middle section, which matches the curve exactly
+        # - A start, which is some ending portion of an inner cubic
+        # - An end, which is the starting portion of a later inner cubic
+        if a <= 0 and b >= 1:
+            self.set_points(vmobject.points)
+            return self
+        bezier_quads = [*vmobject.get_bezier_tuples()]
+        num_cubics = len(bezier_quads)
+
+        # The following two lines will compute which bezier curves of the given mobject need to be processed.
+        # The residue basically indicates de proportion of the selected bezier curve that have to be selected.
+        # Ex : if lower_index is 3, and lower_residue is 0.4, then the algorithm will append to the points 0.4 of the third bezier curve
+        lower_index, lower_residue = integer_interpolate(0, num_cubics, a)
+        upper_index, upper_residue = integer_interpolate(0, num_cubics, b)
+
+        self.clear_points()
+        if num_cubics == 0:
+            return self
+        if lower_index == upper_index:
+            self.append_points(
+                partial_bezier_points(
+                    bezier_quads[lower_index],
+                    lower_residue,
+                    upper_residue,
+                ),
+            )
+        else:
+            self.append_points(
+                partial_bezier_points(bezier_quads[lower_index], lower_residue, 1),
+            )
+            for quad in bezier_quads[lower_index + 1 : upper_index]:
+                self.append_points(quad)
+            self.append_points(
+                partial_bezier_points(bezier_quads[upper_index], 0, upper_residue),
+            )
+        return self
+
     def get_subcurve(self, a, b):
         vmob = self.copy()
         vmob.pointwise_become_partial(self, a, b)
+        return vmob
+
+    def get_subcurve2(self, a, b):
+        vmob = self.copy()
+        vmob.pointwise_become_partial2(self, a, b)
         return vmob
 
     # Related to triangulation
@@ -1079,16 +1162,24 @@ class DashedVMobject(VMobject):
 
             # This determines the length of each "dash"
             full_d_alpha = (1.0 / num_dashes)
-            partial_d_alpha = full_d_alpha * ps_ratio
+            partial_d_alpha = full_d_alpha * (1 - ps_ratio)
 
-            # Rescale so that the last point of vmobject will
-            # be the end of the last dash
-            alphas /= (1 - full_d_alpha + partial_d_alpha)
+            fac = partial_d_alpha / 2
 
-            self.add(*[
-                vmobject.get_subcurve(alpha, alpha + partial_d_alpha)
-                for alpha in alphas[:-1]
-            ])
+            for i in range(len(alphas) - 1):
+                a1 = alphas[i]
+                a2 = alphas[i+1]
+
+                self.add(vmobject.get_subcurve2(a1 + fac, a2 - fac))
+
+            # # Rescale so that the last point of vmobject will
+            # # be the end of the last dash
+            # alphas /= (1 - full_d_alpha + partial_d_alpha)
+
+            # self.add(*[
+            #     vmobject.get_subcurve2(alpha, alpha + partial_d_alpha)
+            #     for alpha in alphas[:-1]
+            # ])
         # Family is already taken care of by get_subcurve
         # implementation
         self.match_style(vmobject, recurse=False)
