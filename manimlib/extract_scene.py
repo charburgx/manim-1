@@ -78,7 +78,14 @@ def compute_total_frames(scene_class, scene_config):
     is saved by default, so that one can more quickly check that the last frame
     looks as expected.
     """
+    module = scene_config["module"]
+    del scene_config["module"]
+
     pre_config = copy.deepcopy(scene_config)
+
+    scene_config["module"] = module
+    pre_config["module"] = module
+
     pre_config["file_writer_config"]["write_to_movie"] = False
     pre_config["file_writer_config"]["save_last_frame"] = True
     pre_config["skip_animations"] = True
@@ -125,7 +132,6 @@ def get_scene_classes_from_module(module):
                 lambda x: is_child_scene(x, module)
             )
         ]
-
 
 def main(config):
     module = config["module"]

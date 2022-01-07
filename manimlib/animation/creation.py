@@ -43,6 +43,9 @@ class ShowCreation(ShowPartial):
         "lag_ratio": 1,
     }
 
+    # def __init__(self, mobject, **kwargs):
+    #     super().__init__(mobject, **kwargs)
+
     def get_bounds(self, alpha):
         return (0, alpha)
 

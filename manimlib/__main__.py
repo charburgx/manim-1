@@ -5,7 +5,6 @@ import manimlib.extract_scene
 import manimlib.utils.init_config
 from manimlib import __version__
 
-
 def main():
     print(f"ManimGL \033[32mv{__version__}\033[0m")
 

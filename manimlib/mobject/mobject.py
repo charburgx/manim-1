@@ -60,7 +60,8 @@ class Mobject(object):
         # Must match in attributes of vert shader
         "shader_dtype": [
             ('point', np.float32, (3,)),
-        ]
+        ],
+        "z_index": 0
     }
 
     def __init__(self, **kwargs):
@@ -694,16 +695,23 @@ class Mobject(object):
         self.shift(-self.get_center())
         return self
 
+    def align_on_border_vec(self, direction, buff=DEFAULT_MOBJECT_TO_EDGE_BUFFER):
+        target_point = np.sign(direction) * (FRAME_X_RADIUS, FRAME_Y_RADIUS, 0)
+        point_to_align = self.get_bounding_box_point(direction)
+        shift_val = target_point - point_to_align - buff * np.array(direction)
+        shift_val = shift_val * abs(np.sign(direction))
+        return shift_val
+
     def align_on_border(self, direction, buff=DEFAULT_MOBJECT_TO_EDGE_BUFFER):
         """
         Direction just needs to be a vector pointing towards side or
         corner in the 2d plane.
         """
-        target_point = np.sign(direction) * (FRAME_X_RADIUS, FRAME_Y_RADIUS, 0)
-        point_to_align = self.get_bounding_box_point(direction)
-        shift_val = target_point - point_to_align - buff * np.array(direction)
-        shift_val = shift_val * abs(np.sign(direction))
-        self.shift(shift_val)
+        # target_point = np.sign(direction) * (FRAME_X_RADIUS, FRAME_Y_RADIUS, 0)
+        # point_to_align = self.get_bounding_box_point(direction)
+        # shift_val = target_point - point_to_align - buff * np.array(direction)
+        # shift_val = shift_val * abs(np.sign(direction))
+        self.shift(self.align_on_border_vec(direction, buff=buff))
         return self
 
     def to_corner(self, corner=LEFT + DOWN, buff=DEFAULT_MOBJECT_TO_EDGE_BUFFER):
@@ -981,6 +989,10 @@ class Mobject(object):
 
         for mob, color in zip(mobs, new_colors):
             mob.set_color(color)
+        return self
+
+    def set_z_index(self, z_index):
+        self.z_index = z_index
         return self
 
     def fade(self, darkness=0.5, recurse=True):

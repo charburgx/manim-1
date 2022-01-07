@@ -110,7 +110,7 @@ class Scene(object):
 
         self.window.clear()
         self.camera.clear()
-        self.camera.capture(*self.mobjects)
+        self.camera.capture(*self.get_mobject_family_members())
 
         self.window._window.flip()        
 
@@ -169,7 +169,7 @@ class Scene(object):
         if self.window:
             self.window.clear()
         self.camera.clear()
-        self.camera.capture(*self.mobjects)
+        self.camera.capture(*self.get_mobject_family_members())
 
         if self.window:
             self.window.swap_buffers()

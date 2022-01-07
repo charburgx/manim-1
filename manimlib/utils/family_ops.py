@@ -1,14 +1,19 @@
 import itertools as it
 
+from ..mobject.mobject import Mobject
+from ..utils.iterables import remove_list_redundancies
 
-def extract_mobject_family_members(mobject_list, only_those_with_points=False):
-    result = list(it.chain(*[
-        mob.get_family()
-        for mob in mobject_list
-    ]))
+def extract_mobject_family_members(mobjects, use_z_index=True, only_those_with_points=False):
     if only_those_with_points:
-        result = [mob for mob in result if mob.has_points()]
-    return result
+        method = Mobject.family_members_with_points
+    else:
+        method = Mobject.get_family
+    extracted_mobjects = remove_list_redundancies(
+        list(it.chain(*(method(m) for m in mobjects))),
+    )
+    if use_z_index:
+        return sorted(extracted_mobjects, key=lambda m: m.z_index)
+    return extracted_mobjects
 
 
 def restructure_list_to_exclude_certain_family_members(mobject_list, to_remove):
